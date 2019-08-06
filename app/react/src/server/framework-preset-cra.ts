@@ -3,7 +3,20 @@ import { Configuration } from 'webpack';
 import { logger } from '@storybook/node-logger';
 import { applyCRAWebpackConfig, getReactScriptsPath, isReactScriptsInstalled } from './cra-config';
 
+// Disable the built-in preset if the new preset is detected.
+const builtInPresetDisabled = (() => {
+  try {
+    require.resolve('@storybook/preset-create-react-app');
+    return true;
+  } catch (e) {
+    return false;
+  }
+})();
+
 export function webpackFinal(config: Configuration, { configDir }: { configDir: string }) {
+  if (builtInPresetDisabled) {
+    return config;
+  }
   if (!isReactScriptsInstalled()) {
     logger.info('=> Using base config because react-scripts is not installed.');
     return config;
@@ -14,7 +27,7 @@ export function webpackFinal(config: Configuration, { configDir }: { configDir: 
 }
 
 export function managerWebpack(config: Configuration) {
-  if (!isReactScriptsInstalled()) {
+  if (!isReactScriptsInstalled() || builtInPresetDisabled) {
     return config;
   }
 
@@ -27,7 +40,7 @@ export function managerWebpack(config: Configuration) {
 }
 
 export function babelDefault(config: Configuration) {
-  if (!isReactScriptsInstalled()) {
+  if (!isReactScriptsInstalled() || builtInPresetDisabled) {
     return config;
   }
 
